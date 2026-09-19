@@ -110,21 +110,36 @@
   .hero-stat .num{font-family:'Baloo 2'; font-size:clamp(30px,7vw,46px); font-weight:800; color:var(--marigold-soft); line-height:1;}
   .hero-stat .lbl{font-size:12.5px; color:#eaddc4; margin-top:4px;}
 
-  /*<!-- ===================== LOGIN ICON + POPUP ===================== -->*/
-<button class="login-fab" id="loginFab" title="Editor login">👤</button>
-<div class="loginbar" id="loginPanel">
-  <div class="wrap" id="loggedOutBar">
-    <span class="who">Viewing as guest (read-only)</span>
-    <input type="email" id="loginEmail" placeholder="Editor email">
-    <input type="password" id="loginPassword" placeholder="Password">
-    <button class="btn-mini" id="loginBtn">Sign In</button>
-    <span class="msg" id="loginMsg"></span>
-  </div>
-  <div class="wrap" id="loggedInBar" style="display:none;">
-    <span class="who">Signed in as <b id="whoEmail"></b> <span id="whoRole"></span></span>
-    <button class="btn-mini ghost" id="logoutBtn">Sign Out</button>
-  </div>
-</div>
+  /* ---------- LOGIN FAB + POPUP ---------- */
+  .login-fab{
+    position:fixed; top:14px; right:14px; z-index:50;
+    width:42px; height:42px; border-radius:50%; border:2px solid var(--marigold-soft);
+    background:var(--maroon-950); color:var(--marigold-soft); font-size:19px;
+    display:flex; align-items:center; justify-content:center; cursor:pointer;
+    box-shadow:0 4px 14px rgba(0,0,0,.35);
+  }
+  .login-fab.is-editor{ background:var(--leaf); border-color:var(--leaf); color:#fff; }
+  .loginbar{
+    position:fixed; top:62px; right:14px; z-index:50; width:230px;
+    background:var(--maroon-950); border:1px solid rgba(232,163,61,.35); border-radius:14px;
+    padding:14px; box-shadow:0 10px 28px rgba(0,0,0,.4);
+    display:none;
+  }
+  .loginbar.open{display:block;}
+  .loginbar .wrap{display:flex; flex-direction:column; gap:8px; padding:0; max-width:none;}
+  .loginbar input{
+    padding:8px 10px; border-radius:8px; border:1px solid rgba(232,163,61,.4);
+    background:rgba(255,255,255,.08); color:#fff; font-size:13px; width:100%;
+  }
+  .loginbar input::placeholder{color:#d8c3a3;}
+  .loginbar .btn-mini{
+    padding:8px 14px; border-radius:8px; border:none; background:var(--vermilion); color:#fff;
+    font-weight:700; font-size:12.5px; cursor:pointer; font-family:'Baloo 2'; width:100%;
+  }
+  .loginbar .btn-mini.ghost{background:transparent; border:1px solid var(--marigold-soft); color:var(--marigold-soft);}
+  .loginbar .who{color:#f0e2c8; font-size:12.5px; line-height:1.4;}
+  .loginbar .who b{color:var(--marigold-soft); display:block; word-break:break-all;}
+  .loginbar .msg{color:#ffb4a1; font-size:11.5px;}
 
   /* ---------- TABS ---------- */
   .tabbar-shell{ background:var(--maroon-950); position:sticky; top:0; z-index:30; box-shadow:0 2px 10px rgba(0,0,0,.25); }
@@ -254,9 +269,9 @@
   footer{text-align:center; padding:20px; color:var(--text-soft); font-size:12.5px;}
   .banner{ background:var(--bg-sunk); border:1px dashed var(--border); border-radius:10px; padding:10px 12px; font-size:13px; color:var(--text-soft); margin-bottom:14px; }
   .swipe-hint{font-size:11.5px; color:var(--text-soft); text-align:center; margin-top:2px;}
-     .creator-credit{ font-size:12.5px; color:var(--text-soft); text-align:center; margin-top:6px; line-height:1.6; }
-.creator-credit b{ color:var(--marigold); font-family:'Baloo 2'; }
-.creator-credit a{ color:var(--vermilion); font-weight:600; text-decoration:none; }
+  .creator-credit{ font-size:12.5px; color:var(--text-soft); text-align:center; margin-top:6px; line-height:1.6; }
+  .creator-credit b{ color:var(--marigold); font-family:'Baloo 2'; }
+  .creator-credit a{ color:var(--vermilion); font-weight:600; text-decoration:none; }
 </style>
 </head>
 <body>
@@ -283,13 +298,14 @@
   </div>
 </div>
 
-<!-- ===================== LOGIN BAR ===================== -->
-<div class="loginbar">
+<!-- ===================== LOGIN ICON + POPUP ===================== -->
+<button class="login-fab" id="loginFab" title="Editor login">👤</button>
+<div class="loginbar" id="loginPanel">
   <div class="wrap" id="loggedOutBar">
+    <span class="who">Viewing as guest (read-only)</span>
     <input type="email" id="loginEmail" placeholder="Editor email">
     <input type="password" id="loginPassword" placeholder="Password">
     <button class="btn-mini" id="loginBtn">Sign In</button>
-    <span class="who">viewing as guest (read-only)</span>
     <span class="msg" id="loginMsg"></span>
   </div>
   <div class="wrap" id="loggedInBar" style="display:none;">
@@ -519,7 +535,7 @@
   "use strict";
 
   /* ==========================================================================
-     1) FIREBASE PROJECT CONFIG  —  REPLACE WITH YOUR OWN (see SETUP-GUIDE.txt)
+     1) FIREBASE PROJECT CONFIG
      ========================================================================== */
   var firebaseConfig = {
     apiKey: "AIzaSyBYfKnuUgHxDkXd6QOCaWMMLRe3bv6TQyA",
@@ -532,18 +548,13 @@
   };
 
   /* ==========================================================================
-     1b) CLOUDINARY CONFIG  —  REPLACE WITH YOUR OWN (see SETUP-GUIDE.txt)
-     Used only for photo/video uploads. Everything else (committee,
-     chandaa, kharcha, auction, laddu, schedule) stays in Firestore.
+     1b) CLOUDINARY CONFIG
      ========================================================================== */
   var CLOUDINARY_CLOUD_NAME = "nmezqpmt";
   var CLOUDINARY_UPLOAD_PRESET = "ganesh-uploads";
 
   /* ==========================================================================
-     2) THE 3 PEOPLE ALLOWED TO EDIT  —  REPLACE WITH REAL EMAILS
-     (Must exactly match the accounts you create in Firebase Authentication.
-      This list is a UI convenience only — real protection is enforced by
-      firestore.rules and storage.rules, see SETUP-GUIDE.txt)
+     2) THE PEOPLE ALLOWED TO EDIT
      ========================================================================== */
   var ALLOWED_EDITORS = [
     "srkroyal777@gmail.com"
@@ -557,6 +568,10 @@
   var currentUser = null, canEdit = false;
   var state={ committee:[], chanda:[], kharcha:[], gallery:[], auction:[], laddu:[], schedule:[], settings:{villageName:"Shree Ganesh Utsav Mandal", tag:"Ganpati Bappa Morya", year:2026} };
   var filters={ galleryYear:"all", galleryCat:"all", chandaYear:"all", kharchaYear:"all", ladduYear:"all", scheduleYear:"all" };
+
+  // ---------- login popup elements (declared once, at top level) ----------
+  var loginFab = document.getElementById("loginFab");
+  var loginPanel = document.getElementById("loginPanel");
 
   function esc(s){
     if(s===undefined||s===null) return "";
@@ -658,7 +673,7 @@
       banner.style.display="block";
       banner.textContent = currentUser
         ? "Signed in, but this account isn't on the editor list — viewing in read-only mode."
-        : "👀 Viewing in read-only mode. Committee editors can sign in above to add or update entries.";
+        : "👀 Viewing in read-only mode. Tap the icon top-right to sign in as an editor.";
     } else {
       banner.style.display="none";
     }
@@ -677,29 +692,32 @@
     }
   }
 
-  document.getElementById("loginBtn").onclick=function(){
-  var loginFab=document.getElementById("loginFab");
-  var loginPanel=document.getElementById("loginPanel");
+  // ---------- login popup open/close ----------
   loginFab.onclick=function(e){
     e.stopPropagation();
     loginPanel.classList.toggle("open");
   };
   document.addEventListener("click", function(e){
-    if(!loginPanel.contains(e.target) && e.target!==loginFab){
+    if(loginPanel.classList.contains("open") && !loginPanel.contains(e.target) && e.target!==loginFab){
       loginPanel.classList.remove("open");
     }
   });
   document.addEventListener("keydown", function(e){
     if(e.key==="Escape") loginPanel.classList.remove("open");
   });
+
+  // ---------- login / logout ----------
+  document.getElementById("loginBtn").onclick=function(){
     var email=document.getElementById("loginEmail").value.trim();
     var pass=document.getElementById("loginPassword").value;
     var msg=document.getElementById("loginMsg");
     msg.textContent="";
     if(!email||!pass){ msg.textContent="Enter email and password."; return; }
-    auth.signInWithEmailAndPassword(email, pass).catch(function(err){
-      msg.textContent = "Sign in failed: " + err.message;
-    });
+    auth.signInWithEmailAndPassword(email, pass)
+      .then(function(){ loginPanel.classList.remove("open"); })
+      .catch(function(err){
+        msg.textContent = "Sign in failed: " + err.message;
+      });
   };
   document.getElementById("logoutBtn").onclick=function(){ auth.signOut(); };
 
@@ -714,7 +732,7 @@
   function renderHome(){
     document.getElementById("statMembers").textContent=state.committee.length;
     document.getElementById("statDonors").textContent=state.chanda.length;
-           var vnEl=document.getElementById("villageName");
+    var vnEl=document.getElementById("villageName");
     if(document.activeElement!==vnEl) vnEl.textContent = state.settings.villageName || "Shree Ganesh Utsav Mandal";
     var vtEl=document.getElementById("villageTag");
     if(document.activeElement!==vtEl) vtEl.textContent = state.settings.tag || "Ganpati Bappa Morya";
@@ -1015,7 +1033,7 @@
   document.body.addEventListener("click", function(e){
     var t=e.target, id;
     if((id=t.getAttribute&&t.getAttribute("data-del-member"))){ if(writeGuard()) db.collection("committee").doc(id).delete(); }
-        if((id=t.getAttribute&&t.getAttribute("data-del-gallery"))){ if(writeGuard()) db.collection("gallery").doc(id).delete(); }
+    if((id=t.getAttribute&&t.getAttribute("data-del-gallery"))){ if(writeGuard()) db.collection("gallery").doc(id).delete(); }
     if((id=t.getAttribute&&t.getAttribute("data-del-chanda"))){ if(writeGuard()) db.collection("chanda").doc(id).delete(); }
     if((id=t.getAttribute&&t.getAttribute("data-del-kharcha"))){ if(writeGuard()) db.collection("kharcha").doc(id).delete(); }
     if((id=t.getAttribute&&t.getAttribute("data-del-auction"))){ if(writeGuard()) db.collection("auction").doc(id).delete(); }
@@ -1034,7 +1052,7 @@
     });
   });
 
-  // ---------- upload (Firebase Storage) ----------
+  // ---------- upload (Cloudinary) ----------
   var dz=document.getElementById("dropzone");
   var input=document.getElementById("fileInput");
   dz.addEventListener("click", function(){ if(canEdit) input.click(); });
