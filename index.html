@@ -659,10 +659,10 @@
 
   // ---------- auth / edit permission UI ----------
   function applyEditUI(){
-    document.querySelectorAll("#addMemberCard,#addChandaCard,#addKharchaCard,#addAuctionCard,#addLadduCard,#addScheduleCard,#settingsCard")
+        document.querySelectorAll("#addMemberCard,#addChandaCard,#addKharchaCard,#addAuctionCard,#addLadduCard,#addScheduleCard,#settingsCard")
       .forEach(function(el){
-        el.querySelectorAll("input,select,button,textarea").forEach(function(f){ f.disabled=!canEdit; });
-        el.style.opacity=canEdit?"1":".55";
+        el.style.display = canEdit ? "" : "none";
+      
       });
     var vn=document.getElementById("villageName"), vt=document.getElementById("villageTag");
     vn.contentEditable=canEdit; vt.contentEditable=canEdit;
