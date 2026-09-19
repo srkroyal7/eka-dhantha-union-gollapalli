@@ -702,6 +702,10 @@
   function renderHome(){
     document.getElementById("statMembers").textContent=state.committee.length;
     document.getElementById("statDonors").textContent=state.chanda.length;
+           var vnEl=document.getElementById("villageName");
+    if(document.activeElement!==vnEl) vnEl.textContent = state.settings.villageName || "Shree Ganesh Utsav Mandal";
+    var vtEl=document.getElementById("villageTag");
+    if(document.activeElement!==vtEl) vtEl.textContent = state.settings.tag || "Ganpati Bappa Morya";
     var totalChanda=state.chanda.reduce(function(s,d){return s+(Number(d.amount)||0);},0);
     var totalKharcha=state.kharcha.reduce(function(s,d){return s+(Number(d.amount)||0);},0);
     document.getElementById("statBalance").textContent=fmtMoney(totalChanda-totalKharcha);
