@@ -110,7 +110,7 @@
   .hero-stat .num{font-family:'Baloo 2'; font-size:clamp(30px,7vw,46px); font-weight:800; color:var(--marigold-soft); line-height:1;}
   .hero-stat .lbl{font-size:12.5px; color:#eaddc4; margin-top:4px;}
 
-  <!-- ===================== LOGIN ICON + POPUP ===================== -->
+  /*<!-- ===================== LOGIN ICON + POPUP ===================== -->*/
 <button class="login-fab" id="loginFab" title="Editor login">👤</button>
 <div class="loginbar" id="loginPanel">
   <div class="wrap" id="loggedOutBar">
@@ -665,7 +665,7 @@
 
     document.getElementById("loggedOutBar").style.display = currentUser ? "none" : "flex";
     document.getElementById("loggedInBar").style.display = currentUser ? "flex" : "none";
-           loginFab.classList.toggle("is-editor", canEdit);
+    loginFab.classList.toggle("is-editor", canEdit);
     loginFab.textContent = canEdit ? "✓" : "👤";
     if(currentUser){
       document.getElementById("whoEmail").textContent = currentUser.email;
@@ -678,7 +678,7 @@
   }
 
   document.getElementById("loginBtn").onclick=function(){
-         var loginFab=document.getElementById("loginFab");
+  var loginFab=document.getElementById("loginFab");
   var loginPanel=document.getElementById("loginPanel");
   loginFab.onclick=function(e){
     e.stopPropagation();
