@@ -1,0 +1,1071 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+<title>Shree Ganesh Utsav Mandal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Mukta:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<!-- ===================================================================
+     FIREBASE SDKs (free tier: Firestore + Storage + Authentication)
+     =================================================================== -->
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<!-- Media (photos/videos) are hosted on Cloudinary's free tier instead of
+     Firebase Storage — see CLOUDINARY_CLOUD_NAME / CLOUDINARY_UPLOAD_PRESET
+     below and SETUP-GUIDE.txt. Firestore still stores everything else
+     (committee, chandaa, kharcha, auction, laddu, schedule, and the
+     metadata + URL for each uploaded photo/video). -->
+
+<style>
+  :root{
+    --maroon-950:#2E0E10;
+    --maroon-900:#42151A;
+    --maroon-800:#6B1E23;
+    --maroon-700:#8A2A2C;
+    --vermilion:#C1440E;
+    --vermilion-dim:#a83a0c;
+    --marigold:#E8A33D;
+    --marigold-soft:#F4C978;
+    --gold:#C9A227;
+    --leaf:#2F5233;
+    --leaf-soft:#4C7A52;
+    --ivory:#FBF4E6;
+    --ivory-dim:#F2E6CE;
+    --ink:#2A1810;
+    --ink-soft:#5C4632;
+
+    --bg:var(--ivory);
+    --bg-panel:#ffffff;
+    --bg-sunk:var(--ivory-dim);
+    --text:var(--ink);
+    --text-soft:var(--ink-soft);
+    --border:#E4D2AE;
+    --accent:var(--vermilion);
+    --accent-2:var(--marigold);
+    --shadow: 0 6px 24px rgba(74,16,21,0.12);
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#1C0F0C; --bg-panel:#2A1713; --bg-sunk:#241410;
+      --text:#F5E9D6; --text-soft:#D8C3A3; --border:#4A2E22;
+      --shadow: 0 6px 24px rgba(0,0,0,0.4);
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#1C0F0C; --bg-panel:#2A1713; --bg-sunk:#241410;
+    --text:#F5E9D6; --text-soft:#D8C3A3; --border:#4A2E22;
+    --shadow: 0 6px 24px rgba(0,0,0,0.4);
+  }
+
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg); color:var(--text); font-family:'Mukta',sans-serif;
+    font-size:16px; line-height:1.5; -webkit-font-smoothing:antialiased; overflow-x:hidden;
+  }
+  h1,h2,h3,h4{ font-family:'Baloo 2',sans-serif; margin:0 0 .3em 0; color:var(--text); font-weight:700; }
+  a{color:var(--vermilion);}
+  button{font-family:inherit;}
+  .wrap{max-width:920px;margin:0 auto;padding:0 16px;}
+
+  /* ---------- HERO ---------- */
+  .hero{
+    position:relative;
+    background: radial-gradient(120% 140% at 50% -20%, var(--maroon-700) 0%, var(--maroon-900) 55%, var(--maroon-950) 100%);
+    color:var(--ivory); padding:38px 0 30px; overflow:hidden;
+  }
+  .torana{
+    position:absolute; top:0; left:0; width:100%; height:34px;
+    background-repeat:repeat-x; background-size:44px 34px;
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='44' height='34'><path d='M0 0 H44 V6 C34 6 30 22 22 22 C14 22 10 6 0 6 Z' fill='%23E8A33D'/><circle cx='22' cy='20' r='3' fill='%23C1440E'/></svg>");
+    opacity:.9;
+  }
+  .petals{position:absolute; inset:0; pointer-events:none; overflow:hidden;}
+  .petal{ position:absolute; top:-10%; font-size:14px; opacity:.55; animation:fall linear infinite; will-change:transform; }
+  @keyframes fall{
+    0%{transform:translateY(-10%) translateX(0) rotate(0deg);}
+    100%{transform:translateY(420px) translateX(18px) rotate(200deg);}
+  }
+  @media (prefers-reduced-motion: reduce){ .petal{animation:none; display:none;} }
+  .hero-inner{position:relative; text-align:center; padding-top:14px;}
+  .glyph{width:64px; height:64px; margin:0 auto 6px;}
+  .hero-eyebrow{ font-size:13px; letter-spacing:.02em; color:var(--marigold-soft); margin-bottom:2px; }
+  .hero h1{ font-size:clamp(28px,6vw,42px); color:#fff; margin-bottom:4px; text-shadow:0 2px 12px rgba(0,0,0,.25); }
+  .hero-sub{color:var(--marigold-soft); font-size:14px; margin-bottom:20px;}
+  .hero-editable{
+    background:transparent;border:none;color:inherit;font:inherit;text-align:center;
+    border-bottom:1px dashed transparent; width:auto; max-width:100%;
+  }
+  .hero-editable[contenteditable="true"]:hover, .hero-editable[contenteditable="true"]:focus{
+    border-bottom:1px dashed var(--marigold-soft); outline:none;
+  }
+  .hero-stat{
+    display:inline-block; background:rgba(0,0,0,.18); border:1px solid rgba(232,163,61,.4);
+    border-radius:18px; padding:16px 28px; backdrop-filter:blur(2px);
+  }
+  .hero-stat .num{font-family:'Baloo 2'; font-size:clamp(30px,7vw,46px); font-weight:800; color:var(--marigold-soft); line-height:1;}
+  .hero-stat .lbl{font-size:12.5px; color:#eaddc4; margin-top:4px;}
+
+  /* ---------- LOGIN BAR ---------- */
+  .loginbar{
+    background:var(--maroon-950); border-top:1px solid rgba(232,163,61,.25);
+    padding:10px 0;
+  }
+  .loginbar .wrap{display:flex; flex-wrap:wrap; align-items:center; gap:10px; justify-content:center;}
+  .loginbar input{
+    padding:7px 10px; border-radius:8px; border:1px solid rgba(232,163,61,.4);
+    background:rgba(255,255,255,.08); color:#fff; font-size:13px; width:150px;
+  }
+  .loginbar input::placeholder{color:#d8c3a3;}
+  .loginbar .btn-mini{
+    padding:7px 14px; border-radius:8px; border:none; background:var(--vermilion); color:#fff;
+    font-weight:700; font-size:12.5px; cursor:pointer; font-family:'Baloo 2';
+  }
+  .loginbar .btn-mini.ghost{background:transparent; border:1px solid var(--marigold-soft); color:var(--marigold-soft);}
+  .loginbar .who{color:#f0e2c8; font-size:13px;}
+  .loginbar .who b{color:var(--marigold-soft);}
+  .loginbar .msg{color:#ffb4a1; font-size:12px; width:100%; text-align:center;}
+
+  /* ---------- TABS ---------- */
+  .tabbar-shell{ background:var(--maroon-950); position:sticky; top:0; z-index:30; box-shadow:0 2px 10px rgba(0,0,0,.25); }
+  .tabbar{ display:flex; overflow-x:auto; scrollbar-width:none; gap:2px; padding:0 6px; }
+  .tabbar::-webkit-scrollbar{display:none;}
+  .tab{
+    flex:0 0 auto; position:relative; background:none; border:none; cursor:pointer;
+    color:#e9d9bd; font-family:'Baloo 2'; font-size:14.5px; font-weight:600;
+    padding:13px 14px 15px; white-space:nowrap; opacity:.72; border-bottom:3px solid transparent;
+  }
+  .tab.active{opacity:1; color:#fff; border-bottom-color:var(--marigold);}
+  .tab:focus-visible{outline:2px solid var(--marigold); outline-offset:-2px;}
+
+  main{padding:22px 0 70px;}
+  .panel{display:none;}
+  .panel.active{display:block; animation:panelIn .28s ease;}
+  @keyframes panelIn{from{opacity:0; transform:translateY(6px);} to{opacity:1; transform:none;}}
+  @media (prefers-reduced-motion: reduce){ .panel.active{animation:none;} }
+
+  .card{
+    background:var(--bg-panel); border:1px solid var(--border); border-radius:14px;
+    padding:18px; margin-bottom:16px; box-shadow:var(--shadow); position:relative;
+  }
+  .card::before{
+    content:""; position:absolute; top:0; left:16px; right:16px; height:4px;
+    background-repeat:repeat-x; background-size:14px 4px; opacity:.85;
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='14' height='4'><circle cx='2' cy='2' r='1.6' fill='%23C9A227'/></svg>");
+  }
+  .row{display:flex; flex-wrap:wrap; gap:10px; align-items:center;}
+  .between{justify-content:space-between;}
+  .grid2{display:grid; grid-template-columns:1fr 1fr; gap:10px;}
+  @media (max-width:520px){ .grid2{grid-template-columns:1fr;} }
+
+  .pill{
+    display:inline-flex; align-items:center; gap:6px; padding:6px 13px; border-radius:999px;
+    background:var(--bg-sunk); border:1px solid var(--border); font-size:13.5px; font-weight:600;
+    color:var(--text-soft); cursor:pointer;
+  }
+  .pill.active{background:var(--vermilion); border-color:var(--vermilion); color:#fff;}
+  .pill.leaf.active{background:var(--leaf); border-color:var(--leaf);}
+  select, input[type=text], input[type=number], input[type=date], input[type=time], input[type=email], input[type=password], textarea{
+    font-family:inherit; font-size:14.5px; padding:9px 11px; border-radius:9px;
+    border:1px solid var(--border); background:var(--bg-sunk); color:var(--text); width:100%;
+  }
+  textarea{resize:vertical; min-height:60px;}
+  label{font-size:12.5px; color:var(--text-soft); font-weight:600; display:block; margin-bottom:4px;}
+  .field{margin-bottom:10px;}
+  .btn{
+    display:inline-flex; align-items:center; gap:7px; justify-content:center;
+    padding:10px 18px; border-radius:10px; border:none; cursor:pointer;
+    font-family:'Baloo 2'; font-weight:700; font-size:14.5px; background:var(--vermilion); color:#fff;
+    transition:transform .1s ease;
+  }
+  .btn:active{transform:scale(.97);}
+  .btn.secondary{background:var(--leaf);}
+  .btn.ghost{background:transparent; color:var(--vermilion); border:1.5px solid var(--vermilion);}
+  .btn:disabled{opacity:.5; cursor:not-allowed;}
+  .muted{color:var(--text-soft); font-size:13.5px;}
+  .section-title{display:flex; align-items:center; gap:10px; margin-bottom:14px;}
+  .section-title .ic{font-size:22px;}
+  .empty{ text-align:center; padding:34px 16px; color:var(--text-soft); font-size:14.5px; }
+  .empty .big{font-size:34px; display:block; margin-bottom:8px;}
+
+  .stats{display:grid; grid-template-columns:repeat(2,1fr); gap:10px; margin-bottom:16px;}
+  @media (min-width:560px){ .stats{grid-template-columns:repeat(4,1fr);} }
+  .stat{ background:var(--bg-panel); border:1px solid var(--border); border-radius:12px; padding:14px; text-align:center; box-shadow:var(--shadow); }
+  .stat .n{font-family:'Baloo 2'; font-size:22px; font-weight:800; color:var(--vermilion);}
+  .stat .l{font-size:12px; color:var(--text-soft); margin-top:2px;}
+
+  .donor-row{ display:flex; align-items:center; gap:12px; padding:11px 4px; border-bottom:1px solid var(--border); }
+  .donor-row:last-child{border-bottom:none;}
+  .donor-rank{
+    width:28px; height:28px; border-radius:50%; background:var(--bg-sunk); color:var(--text-soft);
+    display:flex; align-items:center; justify-content:center; font-weight:700; font-size:13px; flex:0 0 auto;
+  }
+  .donor-row.top .donor-rank{background:var(--gold); color:#3c2c04;}
+  .donor-info{flex:1; min-width:0;}
+  .donor-name{font-weight:700; font-size:14.5px;}
+  .donor-village{font-size:12.5px; color:var(--text-soft);}
+  .donor-amt{font-family:'Baloo 2'; font-weight:800; color:var(--leaf); font-size:15.5px; flex:0 0 auto;}
+
+  .member-card{
+    background:var(--bg-sunk); border-radius:12px; padding:12px 14px; margin-bottom:8px;
+    display:flex; justify-content:space-between; align-items:center; gap:10px;
+  }
+  .member-name{font-weight:700; font-size:14.5px;}
+  .member-role{font-size:12.5px; color:var(--text-soft);}
+  .cat-heading{
+    font-family:'Baloo 2'; font-weight:700; font-size:15px; color:var(--vermilion);
+    margin:18px 0 8px; padding-bottom:4px; border-bottom:2px solid var(--marigold); display:inline-block;
+  }
+
+  .dropzone{
+    border:2.5px dashed var(--marigold); border-radius:18px; padding:26px 16px; text-align:center;
+    background:var(--bg-sunk); cursor:pointer; margin-bottom:16px; transition:background .15s, transform .1s;
+  }
+  .dropzone.drag{background:var(--marigold-soft); transform:scale(1.01);}
+  .dropzone .ic{font-size:30px; display:block; margin-bottom:6px;}
+  .masonry{columns:2 180px; column-gap:10px;}
+  @media (max-width:420px){ .masonry{columns:2 140px;} }
+  .g-item{
+    break-inside:avoid; margin-bottom:10px; border-radius:12px; overflow:hidden; position:relative;
+    background:var(--bg-sunk); cursor:pointer; box-shadow:var(--shadow);
+  }
+  .g-item img, .g-item video{width:100%; display:block;}
+  .g-cap{ position:absolute; bottom:0; left:0; right:0; padding:6px 8px 5px; background:linear-gradient(transparent, rgba(0,0,0,.7)); color:#fff; font-size:11.5px; }
+  .g-del{ position:absolute; top:6px; right:6px; background:rgba(0,0,0,.55); color:#fff; border:none; border-radius:50%; width:26px; height:26px; font-size:14px; cursor:pointer; z-index:2; }
+  .lightbox{
+    position:fixed; inset:0; background:rgba(20,8,6,.92); z-index:100; display:flex;
+    align-items:center; justify-content:center; padding:20px; opacity:0; pointer-events:none; transition:opacity .2s ease;
+  }
+  .lightbox.open{opacity:1; pointer-events:auto;}
+  .lightbox img, .lightbox video{max-width:100%; max-height:80vh; border-radius:10px;}
+  .lightbox-close{ position:absolute; top:16px; right:20px; color:#fff; font-size:28px; background:none; border:none; cursor:pointer; }
+  .lightbox-cap{color:#f0e2c8; text-align:center; margin-top:10px; font-size:13.5px; max-width:520px;}
+
+  .timeline{position:relative; padding-left:26px;}
+  .timeline::before{content:""; position:absolute; left:8px; top:4px; bottom:4px; width:2px; background:var(--border);}
+  .t-item{position:relative; padding-bottom:18px;}
+  .t-item::before{
+    content:""; position:absolute; left:-26px; top:2px; width:14px; height:14px; border-radius:50%;
+    background:var(--marigold); border:3px solid var(--bg-panel); box-shadow:0 0 0 2px var(--marigold);
+  }
+  .t-year{font-family:'Baloo 2'; font-weight:800; color:var(--vermilion); font-size:16.5px;}
+  .t-body{font-size:14px; margin-top:2px;}
+
+  footer{text-align:center; padding:20px; color:var(--text-soft); font-size:12.5px;}
+  .banner{ background:var(--bg-sunk); border:1px dashed var(--border); border-radius:10px; padding:10px 12px; font-size:13px; color:var(--text-soft); margin-bottom:14px; }
+  .swipe-hint{font-size:11.5px; color:var(--text-soft); text-align:center; margin-top:2px;}
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="torana"></div>
+  <div class="petals" id="petals"></div>
+  <div class="wrap hero-inner">
+    <svg class="glyph" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <circle cx="32" cy="32" r="30" fill="#8A2A2C" stroke="#E8A33D" stroke-width="2"/>
+      <path d="M22 26c0-6 4-9 10-9s10 3 10 9-3 8-3 12c0 4 3 5 3 5" stroke="#F4C978" stroke-width="3" stroke-linecap="round" fill="none"/>
+      <circle cx="26" cy="24" r="2.4" fill="#F4C978"/>
+      <circle cx="38" cy="24" r="2.4" fill="#F4C978"/>
+      <path d="M20 40c4 4 20 4 24 0" stroke="#F4C978" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+      <circle cx="32" cy="48" r="3.4" fill="#E8A33D"/>
+    </svg>
+    <div class="hero-eyebrow">Ganesh Chaturthi Utsav</div>
+    <h1><span class="hero-editable" id="villageName" contenteditable="false">EKA DHANTHA UNION - GOLLAPALLI</span></h1>
+    <div class="hero-sub">🙏 <span class="hero-editable" id="villageTag" contenteditable="false">Ganpati Bappa Morya</span> · Utsav <span id="heroYear">2026</span></div>
+    <div class="hero-stat">
+      <div class="num" id="heroTotalChanda">₹0</div>
+      <div class="lbl">Total Chandaa Collected — Utsav <span id="heroYear2">2026</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== LOGIN BAR ===================== -->
+<div class="loginbar">
+  <div class="wrap" id="loggedOutBar">
+    <input type="email" id="loginEmail" placeholder="Editor email">
+    <input type="password" id="loginPassword" placeholder="Password">
+    <button class="btn-mini" id="loginBtn">Sign In</button>
+    <span class="who">viewing as guest (read-only)</span>
+    <span class="msg" id="loginMsg"></span>
+  </div>
+  <div class="wrap" id="loggedInBar" style="display:none;">
+    <span class="who">Signed in as <b id="whoEmail"></b> <span id="whoRole"></span></span>
+    <button class="btn-mini ghost" id="logoutBtn">Sign Out</button>
+  </div>
+</div>
+
+<div class="tabbar-shell">
+  <div class="wrap">
+    <div class="tabbar" id="tabbar">
+      <button class="tab active" data-tab="home">🪔 Home</button>
+      <button class="tab" data-tab="gallery">🖼️ Gallery</button>
+      <button class="tab" data-tab="committee">🤝 Committee</button>
+      <button class="tab" data-tab="chanda">💰 Chandaa</button>
+      <button class="tab" data-tab="kharcha">🧾 Expenses</button>
+      <button class="tab" data-tab="auction">🍬 Laddu Auction</button>
+      <button class="tab" data-tab="ladduDonors">🎁 Laddu Donor</button>
+      <button class="tab" data-tab="schedule">📅 Utsav Schedule</button>
+    </div>
+  </div>
+</div>
+
+<main class="wrap">
+
+  <div class="banner" id="modeBanner" style="display:none;"></div>
+
+  <!-- HOME -->
+  <div class="panel active" id="panel-home">
+    <div class="stats">
+      <div class="stat"><div class="n" id="statMembers">0</div><div class="l">Committee Members</div></div>
+      <div class="stat"><div class="n" id="statDonors">0</div><div class="l">Chandaa Donors</div></div>
+      <div class="stat"><div class="n" id="statBalance">₹0</div><div class="l">Balance (Chandaa − Kharcha)</div></div>
+      <div class="stat"><div class="n" id="statGallery">0</div><div class="l">Photos &amp; Videos</div></div>
+    </div>
+    <div class="card">
+      <div class="section-title"><span class="ic">👑</span><h3>Sabse Bada Daata (Highest Donor — All Years)</h3></div>
+      <div id="homeTopDonor" class="empty"><span class="big">🙏</span>No chandaa entries yet.</div>
+    </div>
+    <div class="card">
+      <div class="section-title"><span class="ic">🍬</span><h3>This Year's Laddu Auction</h3></div>
+      <div id="homeAuction" class="empty"><span class="big">🍬</span>No auction recorded for this year yet.</div>
+    </div>
+    <div class="card" id="settingsCard">
+      <div class="section-title"><span class="ic">⚙️</span><h3>Utsav Settings</h3></div>
+      <div class="grid2">
+        <div class="field"><label>Mandal / Village name</label><input type="text" id="setVillage" placeholder="Shree Ganesh Utsav Mandal"></div>
+        <div class="field"><label>Current utsav year</label><input type="number" id="setYear" placeholder="2026"></div>
+      </div>
+      <button class="btn" id="saveSettings">Save Settings</button>
+      <div class="muted" style="margin-top:8px;">Editors only. Sets the year shown as default across the site.</div>
+    </div>
+  </div>
+
+  <!-- GALLERY -->
+  <div class="panel" id="panel-gallery">
+    <div class="section-title"><span class="ic">🖼️</span><h3>Photo &amp; Video Gallery</h3></div>
+    <div class="dropzone" id="dropzone">
+      <span class="ic">📥</span>
+      <div><strong>Drag &amp; drop</strong> photos or videos here, or tap to choose</div>
+      <div class="muted">Sorted automatically into the selected year &amp; category below</div>
+      <input type="file" id="fileInput" accept="image/*,video/*" multiple style="display:none;">
+    </div>
+    <div class="grid2" style="margin-bottom:14px;">
+      <div class="field"><label>Upload to year</label><select id="uploadYear"></select></div>
+      <div class="field"><label>Category</label>
+        <select id="uploadCategory">
+          <option>Sthapana</option><option>Daily Aarti</option><option>Cultural Program</option>
+          <option>Prasad Distribution</option><option>Committee Moments</option><option>Visarjan</option><option>General</option>
+        </select>
+      </div>
+    </div>
+    <div id="uploadStatus" class="muted"></div>
+    <div class="row" style="margin:16px 0 8px;" id="galleryYearFilter"></div>
+    <div class="row" style="margin-bottom:14px;" id="galleryCatFilter"></div>
+    <div class="masonry" id="galleryGrid"></div>
+    <div id="galleryEmpty" class="empty" style="display:none;"><span class="big">🖼️</span>No media in this filter yet.</div>
+  </div>
+
+  <!-- COMMITTEE -->
+  <div class="panel" id="panel-committee">
+    <div class="section-title"><span class="ic">🤝</span><h3>Committee Members</h3></div>
+    <div class="card" id="addMemberCard">
+      <div class="grid2">
+        <div class="field"><label>Name</label><input type="text" id="memName" placeholder="Full name"></div>
+        <div class="field"><label>Category</label>
+          <select id="memCategory">
+            <option>Adhyaksha (President)</option><option>Upadhyaksha (Vice President)</option>
+            <option>Sachiv (Secretary)</option><option>Koshadhyaksha (Treasurer)</option>
+            <option>Sanskritik Vibhag (Cultural Team)</option><option>Vyavastha Vibhag (Arrangements)</option>
+            <option>Yuva Mandal (Volunteers)</option><option>Other</option>
+          </select>
+        </div>
+      </div>
+      <div class="field"><label>Role / note (optional)</label><input type="text" id="memRole" placeholder="e.g. Ward 3, since 2019"></div>
+      <button class="btn" id="addMember">Add Member</button>
+    </div>
+    <div id="committeeList"></div>
+    <div id="committeeEmpty" class="empty" style="display:none;"><span class="big">🤝</span>No committee members added yet.</div>
+  </div>
+
+  <!-- CHANDA -->
+  <div class="panel" id="panel-chanda">
+    <div class="section-title"><span class="ic">💰</span><h3>Chandaa (Donations)</h3></div>
+    <div class="card" id="addChandaCard">
+      <div class="grid2">
+        <div class="field"><label>Donor name</label><input type="text" id="chName" placeholder="Full name"></div>
+        <div class="field"><label>Village / area</label><input type="text" id="chVillage" placeholder="Optional"></div>
+      </div>
+      <div class="grid2">
+        <div class="field"><label>Amount (₹)</label><input type="number" id="chAmount" placeholder="0"></div>
+        <div class="field"><label>Year</label><select id="chYear"></select></div>
+      </div>
+      <div class="field"><label>Note (optional)</label><input type="text" id="chNote" placeholder="e.g. cash / online"></div>
+      <button class="btn" id="addChanda">Add Chandaa Entry</button>
+    </div>
+    <div class="row" style="margin-bottom:12px;" id="chandaYearFilter"></div>
+    <div class="card">
+      <div class="row between" style="margin-bottom:6px;"><strong>Total collected</strong><span class="donor-amt" id="chandaYearTotal">₹0</span></div>
+      <div id="chandaList"></div>
+      <div id="chandaEmpty" class="empty" style="display:none;"><span class="big">💰</span>No donations recorded for this year yet.</div>
+    </div>
+  </div>
+
+  <!-- KHARCHA -->
+  <div class="panel" id="panel-kharcha">
+    <div class="section-title"><span class="ic">🧾</span><h3>Kharcha (Expenses)</h3></div>
+    <div class="card" id="addKharchaCard">
+      <div class="grid2">
+        <div class="field"><label>Item / purpose</label><input type="text" id="khItem" placeholder="e.g. Decoration, Prasad"></div>
+        <div class="field"><label>Amount (₹)</label><input type="number" id="khAmount" placeholder="0"></div>
+      </div>
+      <div class="grid2">
+        <div class="field"><label>Year</label><select id="khYear"></select></div>
+        <div class="field"><label>Note (optional)</label><input type="text" id="khNote" placeholder="Vendor, receipt no. etc"></div>
+      </div>
+      <button class="btn secondary" id="addKharcha">Add Expense</button>
+    </div>
+    <div class="row" style="margin-bottom:12px;" id="kharchaYearFilter"></div>
+    <div class="card">
+      <div class="row between" style="margin-bottom:6px;"><strong>Total spent</strong><span class="donor-amt" id="kharchaYearTotal">₹0</span></div>
+      <div id="kharchaList"></div>
+      <div id="kharchaEmpty" class="empty" style="display:none;"><span class="big">🧾</span>No expenses recorded for this year yet.</div>
+    </div>
+  </div>
+
+  <!-- AUCTION -->
+  <div class="panel" id="panel-auction">
+    <div class="section-title"><span class="ic">🍬</span><h3>Laddu Auction — Year by Year</h3></div>
+    <div class="card" id="addAuctionCard">
+      <div class="grid2">
+        <div class="field"><label>Year</label><select id="acYear"></select></div>
+        <div class="field"><label>Winning bid (₹)</label><input type="number" id="acPrice" placeholder="0"></div>
+      </div>
+      <div class="field"><label>Winner name</label><input type="text" id="acWinner" placeholder="Full name"></div>
+      <div class="field"><label>Note (optional)</label><input type="text" id="acNote" placeholder=""></div>
+      <button class="btn" id="addAuction">Save Auction Result</button>
+    </div>
+    <div class="card">
+      <div class="timeline" id="auctionTimeline"></div>
+      <div id="auctionEmpty" class="empty" style="display:none;"><span class="big">🍬</span>No auction history yet.</div>
+    </div>
+  </div>
+
+  <!-- LADDU DONORS -->
+  <div class="panel" id="panel-ladduDonors">
+    <div class="section-title"><span class="ic">🎁</span><h3>Laddu Daata (Laddu Donors) — Year by Year</h3></div>
+    <div class="card" id="addLadduCard">
+      <div class="grid2">
+        <div class="field"><label>Donor name</label><input type="text" id="ldName" placeholder="Full name"></div>
+        <div class="field"><label>Year</label><select id="ldYear"></select></div>
+      </div>
+      <div class="grid2">
+        <div class="field"><label>Quantity (laddus)</label><input type="number" id="ldQty" placeholder="0"></div>
+        <div class="field"><label>Note (optional)</label><input type="text" id="ldNote" placeholder=""></div>
+      </div>
+      <button class="btn" id="addLaddu">Add Laddu Donor</button>
+    </div>
+    <div class="row" style="margin-bottom:12px;" id="ladduYearFilter"></div>
+    <div class="card">
+      <div id="ladduList"></div>
+      <div id="ladduEmpty" class="empty" style="display:none;"><span class="big">🎁</span>No laddu donors recorded for this year yet.</div>
+    </div>
+  </div>
+
+  <!-- SCHEDULE -->
+  <div class="panel" id="panel-schedule">
+    <div class="section-title"><span class="ic">📅</span><h3>Utsav Schedule</h3></div>
+    <div class="card" id="addScheduleCard">
+      <div class="grid2">
+        <div class="field"><label>Date</label><input type="date" id="scDate"></div>
+        <div class="field"><label>Time</label><input type="time" id="scTime"></div>
+      </div>
+      <div class="field"><label>Event</label><input type="text" id="scEvent" placeholder="e.g. Ganpati Sthapana, Maha Aarti"></div>
+      <div class="field"><label>Year</label><select id="scYear"></select></div>
+      <button class="btn" id="addSchedule">Add to Schedule</button>
+    </div>
+    <div class="row" style="margin-bottom:12px;" id="scheduleYearFilter"></div>
+    <div class="card">
+      <div class="timeline" id="scheduleTimeline"></div>
+      <div id="scheduleEmpty" class="empty" style="display:none;"><span class="big">📅</span>No schedule items for this year yet.</div>
+    </div>
+  </div>
+
+  <div class="swipe-hint">Swipe left / right to switch sections</div>
+</main>
+
+<footer>🙏 Ganpati Bappa Morya, Mangal Murti Morya 🙏<br>Made with Firebase + Cloudinary (free tier)</footer>
+
+<div class="lightbox" id="lightbox">
+  <button class="lightbox-close" id="lightboxClose" aria-label="Close">&times;</button>
+  <div>
+    <div id="lightboxContent"></div>
+    <div class="lightbox-cap" id="lightboxCap"></div>
+  </div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ==========================================================================
+     1) FIREBASE PROJECT CONFIG  —  REPLACE WITH YOUR OWN (see SETUP-GUIDE.txt)
+     ========================================================================== */
+  var firebaseConfig = {
+    apiKey: "AIzaSyBYfKnuUgHxDkXd6QOCaWMMLRe3bv6TQyA",
+    authDomain: "ganesh-utsav-mandal.firebaseapp.com",
+    projectId: "ganesh-utsav-mandal",
+    storageBucket: "ganesh-utsav-mandal.firebasestorage.app",
+    messagingSenderId: "632295005330",
+    appId: "1:632295005330:web:534cceda8d58bdcda99a4b",
+    measurementId: "G-0G96PTSGV6"
+  };
+
+  /* ==========================================================================
+     1b) CLOUDINARY CONFIG  —  REPLACE WITH YOUR OWN (see SETUP-GUIDE.txt)
+     Used only for photo/video uploads. Everything else (committee,
+     chandaa, kharcha, auction, laddu, schedule) stays in Firestore.
+     ========================================================================== */
+  var CLOUDINARY_CLOUD_NAME = "nmezqpmt";
+  var CLOUDINARY_UPLOAD_PRESET = "ganesh-uploads";
+
+  /* ==========================================================================
+     2) THE 3 PEOPLE ALLOWED TO EDIT  —  REPLACE WITH REAL EMAILS
+     (Must exactly match the accounts you create in Firebase Authentication.
+      This list is a UI convenience only — real protection is enforced by
+      firestore.rules and storage.rules, see SETUP-GUIDE.txt)
+     ========================================================================== */
+  var ALLOWED_EDITORS = [
+    "srkroyal777@gmail.com"
+  ].map(function(e){ return e.toLowerCase(); });
+
+  firebase.initializeApp(firebaseConfig);
+  var auth = firebase.auth();
+  var db = firebase.firestore();
+
+  // ---------- state ----------
+  var currentUser = null, canEdit = false;
+  var state={ committee:[], chanda:[], kharcha:[], gallery:[], auction:[], laddu:[], schedule:[], settings:{villageName:"Shree Ganesh Utsav Mandal", tag:"Ganpati Bappa Morya", year:2026} };
+  var filters={ galleryYear:"all", galleryCat:"all", chandaYear:"all", kharchaYear:"all", ladduYear:"all", scheduleYear:"all" };
+
+  function esc(s){
+    if(s===undefined||s===null) return "";
+    return String(s).replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];});
+  }
+  function fmtMoney(n){ n=Number(n)||0; return "₹"+n.toLocaleString("en-IN"); }
+  function uid(){ return (crypto.randomUUID?crypto.randomUUID():("id"+Date.now()+Math.random().toString(16).slice(2))); }
+
+  // ---------- petals ----------
+  function initPetals(){
+    var host=document.getElementById("petals");
+    var glyphs=["🌼","🌸","✿"];
+    for(var i=0;i<14;i++){
+      var s=document.createElement("span");
+      s.className="petal"; s.textContent=glyphs[i%glyphs.length];
+      s.style.left=(Math.random()*100)+"%";
+      s.style.fontSize=(10+Math.random()*10)+"px";
+      s.style.animationDuration=(8+Math.random()*10)+"s";
+      s.style.animationDelay=(-Math.random()*10)+"s";
+      host.appendChild(s);
+    }
+  }
+
+  // ---------- tabs ----------
+  var tabOrder=["home","gallery","committee","chanda","kharcha","auction","ladduDonors","schedule"];
+  var currentTab="home";
+  function showTab(name){
+    currentTab=name;
+    document.querySelectorAll(".tab").forEach(function(b){ b.classList.toggle("active", b.dataset.tab===name); });
+    document.querySelectorAll(".panel").forEach(function(p){ p.classList.toggle("active", p.id==="panel-"+name); });
+    var activeBtn=document.querySelector('.tab[data-tab="'+name+'"]');
+    if(activeBtn) activeBtn.scrollIntoView({behavior:"smooth", inline:"center", block:"nearest"});
+  }
+  document.getElementById("tabbar").addEventListener("click", function(e){
+    var b=e.target.closest(".tab"); if(!b) return; showTab(b.dataset.tab);
+  });
+
+  // swipe gesture
+  (function(){
+    var sx=0, sy=0, active=false;
+    var main=document.querySelector("main");
+    main.addEventListener("touchstart", function(e){
+      if(e.touches.length!==1) return;
+      sx=e.touches[0].clientX; sy=e.touches[0].clientY; active=true;
+    }, {passive:true});
+    main.addEventListener("touchend", function(e){
+      if(!active) return; active=false;
+      var dx=e.changedTouches[0].clientX-sx, dy=e.changedTouches[0].clientY-sy;
+      if(Math.abs(dx)<60 || Math.abs(dx)<Math.abs(dy)*1.4) return;
+      var idx=tabOrder.indexOf(currentTab);
+      if(dx<0 && idx<tabOrder.length-1) showTab(tabOrder[idx+1]);
+      if(dx>0 && idx>0) showTab(tabOrder[idx-1]);
+    }, {passive:true});
+  })();
+
+  // ---------- year helpers ----------
+  function yearsFromData(){
+    var ys={};
+    [state.chanda,state.kharcha,state.gallery,state.auction,state.laddu,state.schedule].forEach(function(arr){
+      arr.forEach(function(d){ if(d.year) ys[d.year]=true; });
+    });
+    ys[state.settings.year]=true;
+    return Object.keys(ys).map(Number).sort(function(a,b){return b-a;});
+  }
+  function fillYearSelect(sel){
+    var years=yearsFromData();
+    var cur=sel.value;
+    sel.innerHTML="";
+    years.forEach(function(y){ var o=document.createElement("option"); o.value=y; o.textContent=y; sel.appendChild(o); });
+    var nextYear=state.settings.year+1;
+    if(years.indexOf(nextYear)===-1){ var o2=document.createElement("option"); o2.value=nextYear; o2.textContent=nextYear+" (new)"; sel.appendChild(o2); }
+    if(cur && Array.from(sel.options).some(function(o){return o.value===cur;})) sel.value=cur;
+    else sel.value=String(state.settings.year);
+  }
+  function pillRow(container, years, current, onPick, cls){
+    container.innerHTML="";
+    years.forEach(function(y){
+      var b=document.createElement("button");
+      b.className="pill"+(cls?(" "+cls):"")+(String(y)===String(current)?" active":"");
+      b.textContent=(y==="all")?"All Years":y;
+      b.onclick=function(){ onPick(y); renderAll(); };
+      container.appendChild(b);
+    });
+  }
+
+  // ---------- auth / edit permission UI ----------
+  function applyEditUI(){
+    document.querySelectorAll("#addMemberCard,#addChandaCard,#addKharchaCard,#addAuctionCard,#addLadduCard,#addScheduleCard,#settingsCard")
+      .forEach(function(el){
+        el.querySelectorAll("input,select,button,textarea").forEach(function(f){ f.disabled=!canEdit; });
+        el.style.opacity=canEdit?"1":".55";
+      });
+    var vn=document.getElementById("villageName"), vt=document.getElementById("villageTag");
+    vn.contentEditable=canEdit; vt.contentEditable=canEdit;
+    document.getElementById("dropzone").style.display = canEdit ? "" : "none";
+
+    var banner=document.getElementById("modeBanner");
+    if(!canEdit){
+      banner.style.display="block";
+      banner.textContent = currentUser
+        ? "Signed in, but this account isn't on the editor list — viewing in read-only mode."
+        : "👀 Viewing in read-only mode. Committee editors can sign in above to add or update entries.";
+    } else {
+      banner.style.display="none";
+    }
+
+    document.getElementById("loggedOutBar").style.display = currentUser ? "none" : "flex";
+    document.getElementById("loggedInBar").style.display = currentUser ? "flex" : "none";
+    if(currentUser){
+      document.getElementById("whoEmail").textContent = currentUser.email;
+      document.getElementById("whoRole").textContent = canEdit ? "(Editor)" : "(not an editor)";
+    }
+    if(canEdit){
+      document.getElementById("setVillage").value=state.settings.villageName||"";
+      document.getElementById("setYear").value=state.settings.year||"";
+    }
+  }
+
+  document.getElementById("loginBtn").onclick=function(){
+    var email=document.getElementById("loginEmail").value.trim();
+    var pass=document.getElementById("loginPassword").value;
+    var msg=document.getElementById("loginMsg");
+    msg.textContent="";
+    if(!email||!pass){ msg.textContent="Enter email and password."; return; }
+    auth.signInWithEmailAndPassword(email, pass).catch(function(err){
+      msg.textContent = "Sign in failed: " + err.message;
+    });
+  };
+  document.getElementById("logoutBtn").onclick=function(){ auth.signOut(); };
+
+  auth.onAuthStateChanged(function(user){
+    currentUser = user;
+    canEdit = !!(user && ALLOWED_EDITORS.indexOf((user.email||"").toLowerCase())!==-1);
+    applyEditUI();
+    renderAll();
+  });
+
+  // ---------- render ----------
+  function renderHome(){
+    document.getElementById("statMembers").textContent=state.committee.length;
+    document.getElementById("statDonors").textContent=state.chanda.length;
+    var totalChanda=state.chanda.reduce(function(s,d){return s+(Number(d.amount)||0);},0);
+    var totalKharcha=state.kharcha.reduce(function(s,d){return s+(Number(d.amount)||0);},0);
+    document.getElementById("statBalance").textContent=fmtMoney(totalChanda-totalKharcha);
+    document.getElementById("statGallery").textContent=state.gallery.length;
+
+    var yearChanda=state.chanda.filter(function(d){return String(d.year)===String(state.settings.year);});
+    var yearTotal=yearChanda.reduce(function(s,d){return s+(Number(d.amount)||0);},0);
+    document.getElementById("heroTotalChanda").textContent=fmtMoney(yearTotal);
+    document.getElementById("heroYear").textContent=state.settings.year;
+    document.getElementById("heroYear2").textContent=state.settings.year;
+
+    var topBox=document.getElementById("homeTopDonor");
+    if(state.chanda.length===0){
+      topBox.innerHTML='<div class="empty"><span class="big">🙏</span>No chandaa entries yet.</div>';
+    } else {
+      var top=state.chanda.slice().sort(function(a,b){return (Number(b.amount)||0)-(Number(a.amount)||0);})[0];
+      topBox.innerHTML='<div class="donor-row top"><div class="donor-rank">👑</div>'+
+        '<div class="donor-info"><div class="donor-name">'+esc(top.donorName)+'</div>'+
+        '<div class="donor-village">'+esc(top.village||"—")+' · Utsav '+esc(top.year)+'</div></div>'+
+        '<div class="donor-amt">'+fmtMoney(top.amount)+'</div></div>';
+    }
+
+    var acBox=document.getElementById("homeAuction");
+    var acThis=state.auction.filter(function(a){return String(a.year)===String(state.settings.year);})[0];
+    if(!acThis){
+      acBox.innerHTML='<div class="empty"><span class="big">🍬</span>No auction recorded for this year yet.</div>';
+    } else {
+      acBox.innerHTML='<div class="donor-row top"><div class="donor-rank">🏆</div>'+
+        '<div class="donor-info"><div class="donor-name">'+esc(acThis.winnerName)+'</div>'+
+        '<div class="donor-village">Utsav '+esc(acThis.year)+(acThis.note?(' · '+esc(acThis.note)):'')+'</div></div>'+
+        '<div class="donor-amt">'+fmtMoney(acThis.price)+'</div></div>';
+    }
+  }
+
+  function renderCommittee(){
+    var byCat={};
+    state.committee.forEach(function(m){ (byCat[m.category||"Other"]=byCat[m.category||"Other"]||[]).push(m); });
+    var list=document.getElementById("committeeList");
+    var cats=Object.keys(byCat);
+    document.getElementById("committeeEmpty").style.display = state.committee.length? "none":"block";
+    if(!cats.length){ list.innerHTML=""; return; }
+    var html="";
+    cats.forEach(function(cat){
+      html+='<div class="cat-heading">'+esc(cat)+'</div>';
+      byCat[cat].forEach(function(m){
+        html+='<div class="member-card"><div><div class="member-name">'+esc(m.name)+'</div>'+
+          (m.role?('<div class="member-role">'+esc(m.role)+'</div>'):'')+'</div>'+
+          (canEdit?('<button class="btn ghost" data-del-member="'+m.id+'" style="padding:6px 10px;font-size:12px;">Remove</button>'):'')+
+          '</div>';
+      });
+    });
+    list.innerHTML=html;
+  }
+
+  function renderChanda(){
+    fillYearSelect(document.getElementById("chYear"));
+    var years=["all"].concat(yearsFromData());
+    pillRow(document.getElementById("chandaYearFilter"), years, filters.chandaYear, function(y){filters.chandaYear=y;});
+    var list=state.chanda.filter(function(d){ return filters.chandaYear==="all" || String(d.year)===String(filters.chandaYear); })
+                          .sort(function(a,b){return (Number(b.amount)||0)-(Number(a.amount)||0);});
+    var total=list.reduce(function(s,d){return s+(Number(d.amount)||0);},0);
+    document.getElementById("chandaYearTotal").textContent=fmtMoney(total);
+    document.getElementById("chandaEmpty").style.display=list.length?"none":"block";
+    var html="";
+    list.forEach(function(d,i){
+      html+='<div class="donor-row'+(i===0&&list.length>1?" top":"")+'">'+
+        '<div class="donor-rank">'+(i===0?"👑":(i+1))+'</div>'+
+        '<div class="donor-info"><div class="donor-name">'+esc(d.donorName)+'</div>'+
+        '<div class="donor-village">'+esc(d.village||"—")+(d.note?(' · '+esc(d.note)):'')+' · '+esc(d.year)+'</div></div>'+
+        '<div class="donor-amt">'+fmtMoney(d.amount)+'</div>'+
+        (canEdit?('<button class="btn ghost" data-del-chanda="'+d.id+'" style="padding:5px 9px;font-size:11px;">✕</button>'):'')+
+        '</div>';
+    });
+    document.getElementById("chandaList").innerHTML=html;
+  }
+
+  function renderKharcha(){
+    fillYearSelect(document.getElementById("khYear"));
+    var years=["all"].concat(yearsFromData());
+    pillRow(document.getElementById("kharchaYearFilter"), years, filters.kharchaYear, function(y){filters.kharchaYear=y;}, "leaf");
+    var list=state.kharcha.filter(function(d){ return filters.kharchaYear==="all" || String(d.year)===String(filters.kharchaYear); })
+                           .sort(function(a,b){return (b.createdAt||0)-(a.createdAt||0);});
+    var total=list.reduce(function(s,d){return s+(Number(d.amount)||0);},0);
+    document.getElementById("kharchaYearTotal").textContent=fmtMoney(total);
+    document.getElementById("kharchaEmpty").style.display=list.length?"none":"block";
+    var html="";
+    list.forEach(function(d){
+      html+='<div class="donor-row"><div class="donor-rank">🧾</div>'+
+        '<div class="donor-info"><div class="donor-name">'+esc(d.item)+'</div>'+
+        '<div class="donor-village">'+(d.note?esc(d.note)+' · ':'')+esc(d.year)+'</div></div>'+
+        '<div class="donor-amt" style="color:var(--vermilion);">'+fmtMoney(d.amount)+'</div>'+
+        (canEdit?('<button class="btn ghost" data-del-kharcha="'+d.id+'" style="padding:5px 9px;font-size:11px;">✕</button>'):'')+
+        '</div>';
+    });
+    document.getElementById("kharchaList").innerHTML=html;
+  }
+
+  function renderAuction(){
+    fillYearSelect(document.getElementById("acYear"));
+    var list=state.auction.slice().sort(function(a,b){return b.year-a.year;});
+    document.getElementById("auctionEmpty").style.display=list.length?"none":"block";
+    var html="";
+    list.forEach(function(a){
+      html+='<div class="t-item"><div class="t-year">'+esc(a.year)+'</div>'+
+        '<div class="t-body">🏆 <strong>'+esc(a.winnerName)+'</strong> won the laddu auction for '+fmtMoney(a.price)+
+        (a.note?(' — '+esc(a.note)):'')+
+        (canEdit?(' <button class="btn ghost" data-del-auction="'+a.id+'" style="padding:3px 8px;font-size:11px;margin-left:6px;">✕</button>'):'')+
+        '</div></div>';
+    });
+    document.getElementById("auctionTimeline").innerHTML=html;
+  }
+
+  function renderLaddu(){
+    fillYearSelect(document.getElementById("ldYear"));
+    var years=["all"].concat(yearsFromData());
+    pillRow(document.getElementById("ladduYearFilter"), years, filters.ladduYear, function(y){filters.ladduYear=y;});
+    var list=state.laddu.filter(function(d){ return filters.ladduYear==="all" || String(d.year)===String(filters.ladduYear); })
+                         .sort(function(a,b){return (Number(b.quantity)||0)-(Number(a.quantity)||0);});
+    document.getElementById("ladduEmpty").style.display=list.length?"none":"block";
+    var html="";
+    list.forEach(function(d){
+      html+='<div class="donor-row"><div class="donor-rank">🎁</div>'+
+        '<div class="donor-info"><div class="donor-name">'+esc(d.donorName)+'</div>'+
+        '<div class="donor-village">'+(d.note?esc(d.note)+' · ':'')+esc(d.year)+'</div></div>'+
+        '<div class="donor-amt" style="color:var(--gold);">'+esc(d.quantity)+' laddus</div>'+
+        (canEdit?('<button class="btn ghost" data-del-laddu="'+d.id+'" style="padding:5px 9px;font-size:11px;">✕</button>'):'')+
+        '</div>';
+    });
+    document.getElementById("ladduList").innerHTML=html;
+  }
+
+  function renderSchedule(){
+    fillYearSelect(document.getElementById("scYear"));
+    var years=["all"].concat(yearsFromData());
+    pillRow(document.getElementById("scheduleYearFilter"), years, filters.scheduleYear, function(y){filters.scheduleYear=y;}, "leaf");
+    var list=state.schedule.filter(function(d){ return filters.scheduleYear==="all" || String(d.year)===String(filters.scheduleYear); })
+                            .sort(function(a,b){ return (a.date+(a.time||"")).localeCompare(b.date+(b.time||"")); });
+    document.getElementById("scheduleEmpty").style.display=list.length?"none":"block";
+    var html="";
+    list.forEach(function(d){
+      var dt=d.date? new Date(d.date+"T00:00:00").toLocaleDateString("en-IN",{day:"numeric",month:"short",year:"numeric"}) : "";
+      html+='<div class="t-item"><div class="t-year">'+esc(dt)+(d.time?(' · '+esc(d.time)):'')+'</div>'+
+        '<div class="t-body">'+esc(d.event)+
+        (canEdit?(' <button class="btn ghost" data-del-schedule="'+d.id+'" style="padding:3px 8px;font-size:11px;margin-left:6px;">✕</button>'):'')+
+        '</div></div>';
+    });
+    document.getElementById("scheduleTimeline").innerHTML=html;
+  }
+
+  function renderGallery(){
+    fillYearSelect(document.getElementById("uploadYear"));
+    var years=["all"].concat(yearsFromData());
+    pillRow(document.getElementById("galleryYearFilter"), years, filters.galleryYear, function(y){filters.galleryYear=y;});
+    var cats=["all","Sthapana","Daily Aarti","Cultural Program","Prasad Distribution","Committee Moments","Visarjan","General"];
+    pillRow(document.getElementById("galleryCatFilter"), cats, filters.galleryCat, function(c){filters.galleryCat=c;}, "leaf");
+
+    var list=state.gallery.filter(function(g){
+      return (filters.galleryYear==="all"||String(g.year)===String(filters.galleryYear)) &&
+             (filters.galleryCat==="all"||g.category===filters.galleryCat);
+    }).sort(function(a,b){return (b.createdAt||0)-(a.createdAt||0);});
+
+    document.getElementById("galleryEmpty").style.display=list.length?"none":"block";
+    var grid=document.getElementById("galleryGrid");
+    grid.innerHTML="";
+    list.forEach(function(g){
+      var el=document.createElement("div");
+      el.className="g-item";
+      var media = g.type==="video"
+        ? '<video src="'+esc(g.url)+'" muted playsinline></video>'
+        : '<img src="'+esc(g.url)+'" loading="lazy" alt="'+esc(g.caption||g.category||"")+'">';
+      el.innerHTML=media+'<div class="g-cap">'+esc(g.category||"")+' · '+esc(g.year||"")+'</div>'+
+        (canEdit?('<button class="g-del" data-del-gallery="'+g.id+'" title="Remove">✕</button>'):'');
+      el.querySelector("img,video").onclick=function(){ openLightbox(g); };
+      grid.appendChild(el);
+    });
+  }
+
+  function renderAll(){
+    renderHome(); renderGallery(); renderCommittee(); renderChanda();
+    renderKharcha(); renderAuction(); renderLaddu(); renderSchedule();
+  }
+
+  // ---------- lightbox ----------
+  function openLightbox(g){
+    var lb=document.getElementById("lightbox");
+    var content=document.getElementById("lightboxContent");
+    content.innerHTML = g.type==="video"
+      ? '<video src="'+esc(g.url)+'" controls autoplay playsinline></video>'
+      : '<img src="'+esc(g.url)+'">';
+    document.getElementById("lightboxCap").textContent=(g.category||"")+" · "+(g.year||"");
+    lb.classList.add("open");
+  }
+  function closeLightbox(){
+    document.getElementById("lightbox").classList.remove("open");
+    document.getElementById("lightboxContent").innerHTML="";
+  }
+  document.getElementById("lightboxClose").onclick=closeLightbox;
+  document.getElementById("lightbox").addEventListener("click", function(e){ if(e.target.id==="lightbox") closeLightbox(); });
+  document.addEventListener("keydown", function(e){ if(e.key==="Escape") closeLightbox(); });
+
+  // ---------- firestore wiring ----------
+  function watch(name, key){
+    db.collection(name).onSnapshot(function(snap){
+      state[key] = snap.docs.map(function(d){ return Object.assign({id:d.id}, d.data()); });
+      renderAll();
+    }, function(err){ console.error(name, err); });
+  }
+
+  function writeGuard(){
+    if(!canEdit){ alert("Only committee editors can add or edit entries. Sign in with an authorized email above."); return false; }
+    return true;
+  }
+
+  db.collection("settings").doc("main").onSnapshot(function(doc){
+    if(doc.exists){ state.settings = Object.assign({}, state.settings, doc.data()); renderAll(); }
+  });
+  watch("committee","committee");
+  watch("chanda","chanda");
+  watch("kharcha","kharcha");
+  watch("gallery","gallery");
+  watch("auction","auction");
+  watch("laddu","laddu");
+  watch("schedule","schedule");
+
+  // ---------- form handlers ----------
+  document.getElementById("addMember").onclick=function(){
+    if(!writeGuard()) return;
+    var name=document.getElementById("memName").value.trim();
+    if(!name) return;
+    db.collection("committee").doc(uid()).set({name:name, category:document.getElementById("memCategory").value, role:document.getElementById("memRole").value.trim(), createdAt:Date.now()});
+    document.getElementById("memName").value=""; document.getElementById("memRole").value="";
+  };
+  document.getElementById("addChanda").onclick=function(){
+    if(!writeGuard()) return;
+    var name=document.getElementById("chName").value.trim();
+    var amt=Number(document.getElementById("chAmount").value);
+    if(!name||!amt) return;
+    db.collection("chanda").doc(uid()).set({
+      donorName:name, village:document.getElementById("chVillage").value.trim(),
+      amount:amt, year:Number(document.getElementById("chYear").value)||state.settings.year,
+      note:document.getElementById("chNote").value.trim(), createdAt:Date.now()
+    });
+    document.getElementById("chName").value=""; document.getElementById("chVillage").value="";
+    document.getElementById("chAmount").value=""; document.getElementById("chNote").value="";
+  };
+  document.getElementById("addKharcha").onclick=function(){
+    if(!writeGuard()) return;
+    var item=document.getElementById("khItem").value.trim();
+    var amt=Number(document.getElementById("khAmount").value);
+    if(!item||!amt) return;
+    db.collection("kharcha").doc(uid()).set({
+      item:item, amount:amt, year:Number(document.getElementById("khYear").value)||state.settings.year,
+      note:document.getElementById("khNote").value.trim(), createdAt:Date.now()
+    });
+    document.getElementById("khItem").value=""; document.getElementById("khAmount").value=""; document.getElementById("khNote").value="";
+  };
+  document.getElementById("addAuction").onclick=function(){
+    if(!writeGuard()) return;
+    var winner=document.getElementById("acWinner").value.trim();
+    var price=Number(document.getElementById("acPrice").value);
+    var year=Number(document.getElementById("acYear").value)||state.settings.year;
+    if(!winner||!price) return;
+    db.collection("auction").doc(String(year)).set({year:year, winnerName:winner, price:price, note:document.getElementById("acNote").value.trim(), createdAt:Date.now()});
+    document.getElementById("acWinner").value=""; document.getElementById("acPrice").value=""; document.getElementById("acNote").value="";
+  };
+  document.getElementById("addLaddu").onclick=function(){
+    if(!writeGuard()) return;
+    var name=document.getElementById("ldName").value.trim();
+    var qty=Number(document.getElementById("ldQty").value);
+    if(!name||!qty) return;
+    db.collection("laddu").doc(uid()).set({
+      donorName:name, quantity:qty, year:Number(document.getElementById("ldYear").value)||state.settings.year,
+      note:document.getElementById("ldNote").value.trim(), createdAt:Date.now()
+    });
+    document.getElementById("ldName").value=""; document.getElementById("ldQty").value=""; document.getElementById("ldNote").value="";
+  };
+  document.getElementById("addSchedule").onclick=function(){
+    if(!writeGuard()) return;
+    var ev=document.getElementById("scEvent").value.trim();
+    var date=document.getElementById("scDate").value;
+    if(!ev||!date) return;
+    db.collection("schedule").doc(uid()).set({
+      event:ev, date:date, time:document.getElementById("scTime").value,
+      year:Number(document.getElementById("scYear").value)||state.settings.year, createdAt:Date.now()
+    });
+    document.getElementById("scEvent").value=""; document.getElementById("scDate").value=""; document.getElementById("scTime").value="";
+  };
+  document.getElementById("saveSettings").onclick=function(){
+    if(!writeGuard()) return;
+    var v=document.getElementById("setVillage").value.trim()||state.settings.villageName;
+    var y=Number(document.getElementById("setYear").value)||state.settings.year;
+    db.collection("settings").doc("main").set({villageName:v, tag:state.settings.tag, year:y});
+  };
+
+  document.body.addEventListener("click", function(e){
+    var t=e.target, id;
+    if((id=t.getAttribute&&t.getAttribute("data-del-member"))){ if(writeGuard()) db.collection("committee").doc(id).delete(); }
+        if((id=t.getAttribute&&t.getAttribute("data-del-gallery"))){ if(writeGuard()) db.collection("gallery").doc(id).delete(); }
+    if((id=t.getAttribute&&t.getAttribute("data-del-chanda"))){ if(writeGuard()) db.collection("chanda").doc(id).delete(); }
+    if((id=t.getAttribute&&t.getAttribute("data-del-kharcha"))){ if(writeGuard()) db.collection("kharcha").doc(id).delete(); }
+    if((id=t.getAttribute&&t.getAttribute("data-del-auction"))){ if(writeGuard()) db.collection("auction").doc(id).delete(); }
+    if((id=t.getAttribute&&t.getAttribute("data-del-laddu"))){ if(writeGuard()) db.collection("laddu").doc(id).delete(); }
+    if((id=t.getAttribute&&t.getAttribute("data-del-schedule"))){ if(writeGuard()) db.collection("schedule").doc(id).delete(); }
+  });
+
+  ["villageName","villageTag"].forEach(function(elId){
+    document.getElementById(elId).addEventListener("blur", function(){
+      if(!canEdit) return;
+      db.collection("settings").doc("main").set({
+        villageName:document.getElementById("villageName").textContent.trim()||state.settings.villageName,
+        tag:document.getElementById("villageTag").textContent.trim()||state.settings.tag,
+        year:state.settings.year
+      });
+    });
+  });
+
+  // ---------- upload (Firebase Storage) ----------
+  var dz=document.getElementById("dropzone");
+  var input=document.getElementById("fileInput");
+  dz.addEventListener("click", function(){ if(canEdit) input.click(); });
+  ["dragenter","dragover"].forEach(function(ev){ dz.addEventListener(ev, function(e){ e.preventDefault(); if(canEdit) dz.classList.add("drag"); }); });
+  ["dragleave","drop"].forEach(function(ev){ dz.addEventListener(ev, function(e){ e.preventDefault(); dz.classList.remove("drag"); }); });
+  dz.addEventListener("drop", function(e){ if(!canEdit) return; handleFiles(e.dataTransfer.files); });
+  input.addEventListener("change", function(){ handleFiles(input.files); input.value=""; });
+
+  function handleFiles(fileList){
+    if(!canEdit){ alert("Sign in with an authorized editor email to upload."); return; }
+    if(CLOUDINARY_CLOUD_NAME.indexOf("PASTE_")===0 || CLOUDINARY_UPLOAD_PRESET.indexOf("PASTE_")===0){
+      alert("Cloudinary isn't set up yet — fill in CLOUDINARY_CLOUD_NAME and CLOUDINARY_UPLOAD_PRESET near the top of the script (see SETUP-GUIDE.txt).");
+      return;
+    }
+    var files=Array.from(fileList||[]);
+    if(!files.length) return;
+    var year=Number(document.getElementById("uploadYear").value)||state.settings.year;
+    var category=document.getElementById("uploadCategory").value;
+    var statusEl=document.getElementById("uploadStatus");
+    var done=0;
+    statusEl.textContent="Uploading 0/"+files.length+"…";
+    files.forEach(function(file){
+      var type = (file.type||"").indexOf("video")===0 ? "video" : "image";
+      var endpoint = "https://api.cloudinary.com/v1_1/"+CLOUDINARY_CLOUD_NAME+"/"+(type==="video"?"video":"image")+"/upload";
+      var form = new FormData();
+      form.append("file", file);
+      form.append("upload_preset", CLOUDINARY_UPLOAD_PRESET);
+      form.append("folder", "ganesh-utsav/"+year);
+
+      fetch(endpoint, { method:"POST", body:form })
+        .then(function(res){
+          if(!res.ok) return res.json().then(function(j){ throw new Error(j.error&&j.error.message || ("HTTP "+res.status)); });
+          return res.json();
+        })
+        .then(function(data){
+          return db.collection("gallery").doc(uid()).set({
+            year:year, category:category, type:type,
+            url:data.secure_url, cloudinaryPublicId:data.public_id,
+            caption:"", createdAt:Date.now()
+          });
+        })
+        .catch(function(err){
+          console.error("upload failed", err);
+          alert("Upload failed: "+err.message);
+        })
+        .finally(function(){
+          done++; statusEl.textContent = done<files.length ? ("Uploading "+done+"/"+files.length+"…") : "Upload complete ✅";
+          if(done===files.length) setTimeout(function(){statusEl.textContent="";}, 2500);
+        });
+    });
+  }
+
+  // ---------- init ----------
+  initPetals();
+  applyEditUI();
+  renderAll();
+})();
+</script>
+</body>
+</html>
