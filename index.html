@@ -665,6 +665,8 @@
 
     document.getElementById("loggedOutBar").style.display = currentUser ? "none" : "flex";
     document.getElementById("loggedInBar").style.display = currentUser ? "flex" : "none";
+           loginFab.classList.toggle("is-editor", canEdit);
+    loginFab.textContent = canEdit ? "✓" : "👤";
     if(currentUser){
       document.getElementById("whoEmail").textContent = currentUser.email;
       document.getElementById("whoRole").textContent = canEdit ? "(Editor)" : "(not an editor)";
@@ -676,6 +678,20 @@
   }
 
   document.getElementById("loginBtn").onclick=function(){
+         var loginFab=document.getElementById("loginFab");
+  var loginPanel=document.getElementById("loginPanel");
+  loginFab.onclick=function(e){
+    e.stopPropagation();
+    loginPanel.classList.toggle("open");
+  };
+  document.addEventListener("click", function(e){
+    if(!loginPanel.contains(e.target) && e.target!==loginFab){
+      loginPanel.classList.remove("open");
+    }
+  });
+  document.addEventListener("keydown", function(e){
+    if(e.key==="Escape") loginPanel.classList.remove("open");
+  });
     var email=document.getElementById("loginEmail").value.trim();
     var pass=document.getElementById("loginPassword").value;
     var msg=document.getElementById("loginMsg");
