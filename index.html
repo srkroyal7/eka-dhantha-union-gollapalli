@@ -143,19 +143,12 @@
 
   /* ---------- TABS ---------- */
   .tabbar-shell{ background:var(--maroon-950); position:sticky; top:0; z-index:30; box-shadow:0 2px 10px rgba(0,0,0,.25); }
-  .tabbar{ display:flex; overflow-x:auto; scrollbar-width:none; gap:2px; padding:0 6px; }
-  .tabbar::-webkit-scrollbar{display:none;}
+    .tabbar{ display:flex; flex-wrap:wrap; gap:2px; padding:0 6px; }
   .tab{
-    flex:0 0 auto; position:relative; background:none; border:none; cursor:pointer;
-    color:#e9d9bd; font-family:'Baloo 2'; font-size:14.5px; font-weight:600;
-    padding:13px 14px 15px; white-space:nowrap; opacity:.72; border-bottom:3px solid transparent;
-  }
-
-  @media (min-width: 768px){
-    .tabbar{ overflow-x:visible; }
-    .tab{
-      flex:1 1 0; min-width:0; text-align:center; font-size:13.5px; padding:13px 6px 15px;
-    }
+    flex:1 1 auto; min-width:90px; position:relative; background:none; border:none; cursor:pointer;
+    color:#e9d9bd; font-family:'Baloo 2'; font-size:13px; font-weight:600;
+    padding:12px 6px 13px; white-space:nowrap; opacity:.72; border-bottom:3px solid transparent;
+    text-align:center;
   }
   .tab.active{opacity:1; color:#fff; border-bottom-color:var(--marigold);}
   .tab:focus-visible{outline:2px solid var(--marigold); outline-offset:-2px;}
